@@ -27,7 +27,7 @@ return ConvBlock(
         else 
             identity
         end)
-)  
+)  |> gpu
 end
 
 function (net::ConvBlock)(x)
@@ -46,7 +46,7 @@ function ResidualBlock(
         ConvBlock(3, in_channels, in_channels,true,true; pad=1),
         ConvBlock(3, in_channels, in_channels,false,true;pad=1)
     )
-)  
+)   |> gpu
 end
 
 function(net::ResidualBlock)(x)
@@ -68,7 +68,7 @@ function Block(
         InstanceNorm(out_channels),
         x -> leakyrelu.(x, 0.2)
     )
-)
+) |> gpu
 end
 
 function(net::Block)(x)

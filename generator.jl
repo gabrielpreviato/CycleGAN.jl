@@ -30,7 +30,7 @@ return Generator(
         ConvBlock(3, num_features*2, num_features,true,false; stride=2 ,pad=SamePad()),  
     ],
     Conv((7,7),num_features=>in_channels; stride=1,pad=3)
-)  
+)  |> gpu
 end
 
 function (net::Generator)(x)
@@ -48,7 +48,7 @@ end
 using Random
 function test()
     img_channels = 3
-    img_size = 140
+    img_size = 180
     ## need to explicity type to avoid Slow fallback implementation 
     ## https://discourse.julialang.org/t/flux-con-warning/49456
     x = randn(Float32, (img_size, img_size, img_channels, 2))

@@ -13,12 +13,12 @@ using Zygote
 include("generator.jl")
 include("discriminator.jl")
 
-size_img = 28
+size_img = 100
 
 @with_kw struct HyperParams
-    batch_size::Int = 32
-    epochs::Int = 20
-    verbose_freq::Int = 80
+    batch_size::Int = 5
+    epochs::Int = 100
+    verbose_freq::Int = 800
     size_dataset::Int = 1000
     lr_dscr_A::Float64 = 0.00005
     lr_gen_A::Float64 = 0.00005
@@ -35,7 +35,7 @@ function convertI2Float(img)
 end
 
 function load_images(path::String, size::Int)
-	images=zeros(Float32,size_img,size_img,3,size)
+	images= zeros(Float32,size_img,size_img,3,size)
 	for (index, img) in enumerate(readdir(path, join = true))
 		images[:,:,:,index] = convertI2Float(load(img))
         if index == size
@@ -132,7 +132,8 @@ function create_output_image(gen, image)
     fake_image = cpu(gen(image))
     @eval Flux.istraining() = true
     image_array = permutedims(dropdims(fake_image; dims=4), (3,2,1))
-    return colorview(RGB, clamp01nan!(image_array))
+    image_array = colorview(RGB, image_array)
+    return clamp01nan.(image_array)
 end
 
 function train()    
@@ -143,12 +144,12 @@ function train()
     #test images
     test_images_A=zeros(Float32,size_img,size_img,3,1)
     test_images_B=zeros(Float32,size_img,size_img,3,1)
-    test_images_A[:,:,:,1] = convertI2Float(load("horse2zebra/testA/n02381460_1000.jpg"))
-    test_images_B[:,:,:,1] = convertI2Float(load("horse2zebra/testB/n02391049_100.jpg"))
+    test_images_A[:,:,:,1] = convertI2Float(load("horse2zebra/testA/n02381460_1000.jpg")) |> gpu
+    test_images_B[:,:,:,1] = convertI2Float(load("horse2zebra/testB/n02391049_100.jpg")) |> gpu
 
     # Discriminator
-    dscr_A = Discriminator()
-    dscr_B = Discriminator() 
+    dscr_A = Discriminator() 
+    dscr_B = Discriminator()
 
     # Generator
     gen_A =  Generator(3, 64) |> gpu
