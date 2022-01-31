@@ -12,4 +12,6 @@ export Generator
 
 export Cyclegan
 
+export train_gan
+
 end # end module
