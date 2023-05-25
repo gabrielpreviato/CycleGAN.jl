@@ -8,19 +8,19 @@ using Parameters: @with_kw
 using Random
 using Printf
 using Zygote
-using CycleGAN: Discriminator, Generator
+using CycleGAN: Discriminator, Generator, Cyclegan, train_gan
 
-size_img = 28
+size_img = 100
 
 @with_kw struct HyperParams
-    batch_size::Int = 5
+    batch_size::Int = 2
     epochs::Int = 100
     verbose_freq::Int = 800
     size_dataset::Int = 1000
-    lr_dscr_A::Float64 = 0.00005
-    lr_gen_A::Float64 = 0.00005
-    lr_dscr_B::Float64 = 0.00005
-    lr_gen_B::Float64 = 0.00005
+    lr_dscr_A::Float64 = 0.0002
+    lr_gen_A::Float64 = 0.0002
+    lr_dscr_B::Float64 = 0.0002
+    lr_gen_B::Float64 = 0.0002
 end
 
 function convertI2Float(img)
@@ -80,8 +80,8 @@ function train()
     gen_B =  Generator(3, 64) |> gpu
 
     # Optimizers
-    opt_dscr = ADAM(hparams.lr_dscr_A, (0.5,0.99))
-    opt_gen = ADAM(hparams.lr_gen_A, (0.5,0.99))
+    opt_dscr = ADAM(hparams.lr_dscr_A, (0.5, 0.99))
+    opt_gen = ADAM(hparams.lr_gen_A, (0.5, 0.99))
 
     cyclegGAN = Cyclegan(gen_A, gen_B, dscr_A, dscr_B)
 
@@ -91,23 +91,21 @@ function train()
     train_steps = 0
     for ep in 1:hparams.epochs
         @info "Epoch $ep"
+        loss = 0
         for (x,y) in data
-                # Update discriminator and generator
+            # Update discriminator and generator
             loss = train_gan(cyclegGAN, x, y, opt_gen, opt_dscr)
-            if train_steps % hparams.verbose_freq == 0
-                @info("Train step $(ep), Discriminator loss = $(loss["D_loss"]), Generator loss = $(loss["G_loss"])")
-                # Save generated fake image
-                output_image_A = create_output_image(cyclegGAN.gen_AB, test_images_B |> gpu)
-                output_image_B = create_output_image(cyclegGAN.gen_BA, test_images_A |> gpu)
-                save(@sprintf("output/cgan_A_steps_%06d.png", train_steps), output_image_A)
-                save(@sprintf("output/cgan_B_steps_%06d.png", train_steps), output_image_B)
-            end
-        train_steps += 1
         end
+        @info("Train step $(ep), Discriminator loss = $(loss["D_loss"]), Generator loss = $(loss["G_loss"])")
+        # Save generated fake image
+        output_image_A = create_output_image(cyclegGAN.gen_A, test_images_B |> gpu)
+        output_image_B = create_output_image(cyclegGAN.gen_B, test_images_A |> gpu)
+        save(@sprintf("output/cgan_A_steps_%06d.png", ep), output_image_A)
+        save(@sprintf("output/cgan_B_steps_%06d.png", ep), output_image_B)
     end
     @info("Finish  training")
-    output_image_A = create_output_image(cyclegGAN.gen_AB, test_images_B |> gpu)
-    output_image_B = create_output_image(cyclegGAN.gen_BA, test_images_A |> gpu)
+    output_image_A = create_output_image(cyclegGAN.gen_A, test_images_B |> gpu)
+    output_image_B = create_output_image(cyclegGAN.gen_B, test_images_A |> gpu)
     save("output/cgan_A_steps_final.png", output_image_A)
     save("output/cgan_B_steps_final.png", output_image_B)
 end

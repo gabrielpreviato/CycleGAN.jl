@@ -1,5 +1,3 @@
-include("network.jl")
-
 struct Generator
     initial
     downblocks

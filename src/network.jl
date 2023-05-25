@@ -2,7 +2,7 @@ using Flux
 using Functors
 
 struct ConvBlock
-    conv
+    conv::Chain
 end
 
 @functor ConvBlock
