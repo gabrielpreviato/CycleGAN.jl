@@ -6,7 +6,8 @@ struct Generator
     final
 end
 
-@functor Generator
+Flux.@functor Generator (initial, downblocks, resblocks, upblocks, final)
+
 function Generator(
     in_channels::Int,
     num_features::Int = 64,
@@ -42,16 +43,3 @@ function (net::Generator)(x)
     end
     return tanh.(net.final(input))
 end
-
-using Random
-function test()
-    img_channels = 3
-    img_size = 180
-    ## need to explicity type to avoid Slow fallback implementation 
-    ## https://discourse.julialang.org/t/flux-con-warning/49456
-    x = randn(Float32, (img_size, img_size, img_channels, 2))
-    gen = Generator(img_channels, 9)
-    println(size(gen(x)))
-end
-
-#test()
