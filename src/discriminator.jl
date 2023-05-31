@@ -31,7 +31,7 @@ return Discriminator(
         x -> leakyrelu.(x, 0.2)
     ),
     Chain(layers...)
-) |> gpu
+)
 end
 
 function (net::Discriminator)(x)

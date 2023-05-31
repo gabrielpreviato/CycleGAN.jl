@@ -29,7 +29,7 @@ return Generator(
         ConvBlock(3, num_features*2, num_features,true,false; stride=2 ,pad=SamePad()),  
     ],
     Conv((7,7),num_features=>in_channels; stride=1,pad=3)
-)  |> gpu
+)
 end
 
 function (net::Generator)(x)
